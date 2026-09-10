@@ -10,7 +10,7 @@
 
 ## 📌 Overview
 
-**Noggimigo** is an open-source, local Socratic AI tutoring engine and neuroadaptive scaffolding framework created by **Folarera Ayobami Kassim** (Founder & Theoretical Neuroscience Lead at Noggin Labs). 
+**Noggimigo** is an open-source, local Socratic AI tutoring engine and neuroadaptive scaffolding framework created by **@FolatheDuckofDuckingburg** (Founder & Theoretical Neuroscience Lead at Noggin Labs). 
 
 Unlike conventional conversational models that directly output solutions, Noggimigo acts as an empathetic, step-by-step Socratic coach. It decomposes complex mathematical and logical concepts into micro-steps, diagnoses specific conceptual misconceptions using a structured error taxonomy, and integrates real-time biophysical telemetry derived from **Neural Feedback Optimization Theory (NFOT)**.
 

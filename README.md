@@ -149,8 +149,7 @@ Every interaction returns a structured payload containing both pedagogical and b
 ## 📄 Preprints & Theoretical References
 
 1. Kassim, F. A. (2026). *Neural Feedback Optimization Theory*. Zenodo. [DOI: 10.5281/zenodo.21872418](https://doi.org/10.5281/zenodo.21872418)
-2. Kassim, F. A. (2026). *The Memory Machine*. Zenodo. [DOI: 10.5281/zenodo.22160425](https://doi.org/10.5281/zenodo.22160425)
-
+2. Yang, K., Wang, C., Galley, M., Singh, C., Inala, J. P., Zhai, C., & Gao, J. (2026). _StudentSim: Training LLM-based Student Simulators_. [ArXiv](https://arxiv.org/abs/2609.01591). 
 ---
 
 ## 📜 License

@@ -1,71 +1,52 @@
 # Noggimigo 🧠
 
-> **Local Socratic AI Tutoring Engine & Neuroadaptive Scaffolding System for Special Educational Needs**
+> **Local Socratic AI Tutoring Engine with Latency Tracking for Special Educational Needs**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Preprint: Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.21872418-blue)](https://doi.org/10.5281/zenodo.21872418)
 
 ---
 
 ## 📌 Overview
 
-**Noggimigo** is an open-source, local Socratic AI tutoring engine and neuroadaptive scaffolding framework created by **@FolatheDuckofDuckingburg** for [Noggin](https://github.com/Noggin-Labs/Noggin) (Founder & Theoretical Neuroscience Lead at Noggin Labs). 
+**Noggimigo** is an open-source, local Socratic AI tutoring engine created by Folarera Kassim for [Noggin Labs](https://github.com/Noggin-Labs).
 
-Unlike conventional conversational models that directly output solutions, Noggimigo acts as an empathetic, step-by-step Socratic coach. It decomposes complex mathematical and logical concepts into micro-steps, diagnoses specific conceptual misconceptions using a structured error taxonomy, and integrates real-time biophysical telemetry derived from **Neural Feedback Optimization Theory (NFOT)**.
+Unlike conventional conversational models that directly output solutions, Noggimigo acts as a step-by-step Socratic coach. It decomposes mathematical and logical concepts into micro-steps, diagnoses specific conceptual misconceptions using a structured error taxonomy, and tracks interaction latency at the trial level.
 
-Noggimigo is engineered specifically to prevent cognitive fatigue and learning erasure in special education workflows, featuring dedicated accommodation adapters for **ADHD**, **Autism**, and **Dyslexia**.
+Noggimigo is designed for special education workflows, with accommodation adapters for **ADHD**, **Autism**, and **Dyslexia**.
 
 ---
 
 ## 🔬 Core Architecture
 
-Noggimigo operates through a modular four-pillar computational pipeline:
-
-```
-+-----------------------------------------------------------------------------------+
-|                            NoggimigoTutorEngine                                   |
-|                                                                                   |
-|  +---------------------------+             +-----------------------------------+  |
-|  |   SocraticReasoningCore   |             |            NFOTEngine             |  |
-|  | - Intent Classifier       |             | - Write-Back Gap (L) Tracking     |  |
-|  | - Error Taxonomy Diagnosis|             | - Lorentzian Efficiency E(L)      |  |
-|  | - Micro-Step Decomposition|             | - ABETH Synaptic Bias Detection   |  |
-|  +-------------+-------------+             +-----------------+-----------------+  |
-|                |                                             |                    |
-|                +----------------------+----------------------+                    |
-|                                       |                                           |
-|                                       v                                           |
-|                      +----------------------------------+                         |
-|                      |    DisabilityScaffoldAdapter     |                         |
-|                      | (ADHD / Autism / Dyslexia Rules) |                         |
-|                      +----------------------------------+                         |
-+-----------------------------------------------------------------------------------+
-```
+Noggimigo operates through a modular pipeline:
 
 ### 1. `SocraticReasoningCore`
-- **Semantic Intent Classifier (`NoggimigoIntentAI`):** Utilizes local semantic matching to classify student intent without relying on cloud LLM APIs.
-- **Misconception Error Taxonomy:** Dynamically diagnoses procedural and conceptual errors including:
+
+- **Semantic Intent Classifier:** Classifies student intent using local semantic matching, without relying on cloud LLM APIs.
+- **Misconception Error Taxonomy:** Diagnoses procedural and conceptual errors including:
   - `INVERSION_ERROR`: Swapped numerator/denominator or parts of a whole.
-  - `HALVING_ERROR` / `HALF_ERROR`: Off-by-one division in remaining equal slices or incorrect half assumptions.
+  - `HALVING_ERROR` / `HALF_ERROR`: Off-by-one division in remaining equal slices, or incorrect half assumptions.
   - `INVERSE_ERROR`: Applied addition instead of subtraction (or vice versa).
   - `ORDER_ERROR`: Out-of-sequence algebraic steps.
   - `MULTIPLY_ERROR` & `DOUBLING_ERROR`: Factor reduction and scale mistakes.
   - `CONCEPTUAL_GAP`: General foundational understanding gaps.
 - **Micro-Step Scaffolding:** Breaks multi-step problems (algebra, fractions, pattern recognition) into guided sub-questions.
 
-### 2. `NFOTEngine` (Neuroadaptive Telemetry)
-- **Write-Back Gap ($L$):** Measures real-time interaction latency ($L = t_{\text{feedback}} - t_0$).
-- **Lorentzian Efficiency Law:** Calculates biological efficacy $E(L) = \frac{c}{L^2 + c}$.
-- **ABETH Bias Classification:** Applies the *Asymmetric Biological Eligibility Trace Hypothesis* to detect whether feedback timing favors potentiation (`POTENTIATION_FAVORED`) or risks synaptic fatigue/depressive drift (`DEPRESSIVE_BIAS`).
-- **EEG Spectral Analysis:** Monitors Theta-to-Beta Ratio (TBR) and Alpha/Beta spectral power to detect `ATTENTION_DECAY` ($TBR > 2.0$) and trigger automated micro-prompt adjustments before cognitive overload occurs.
+### 2. `LatencyTracker`
+
+- **Write-Back Gap ($L$):** Measures the real-time interval between a prompt and the student's response ($L = t_{\text{response}} - t_{\text{prompt}}$).
+- **Distributional Logging:** Records the full distribution of $L$, not just the mean, so that variance and tail behavior can be examined.
+- **Note:** The relationship between $L$ and learning outcomes is a hypothesis under investigation in [NFOT](https://github.com/Noggin-Labs/NFOT). It is not an established mechanism.
 
 ### 3. `DisabilityScaffoldAdapter`
-- **ADHD Profile:** Enforces 1-step micro-chunks, disables stressful countdown timers, increases visual encouragement frequency, and boosts reward feedback.
-- **Autism Profile:** Provides predictable visual layouts, literal and non-ambiguous phrasing, and explicit step-by-step guidance.
-- **Dyslexia Profile:** Formats prompts with wide font spacing, simplified reading grade levels, and native text-to-speech (TTS) accessibility hooks.
+
+- **ADHD Profile:** 1-step micro-chunks, no countdown timers, more frequent encouragement.
+- **Autism Profile:** Predictable layouts, literal phrasing, explicit step-by-step guidance.
+- **Dyslexia Profile:** Wide font spacing, simplified reading levels, native TTS accessibility hooks.
 
 ### 4. `LessonGenerator` & `NogginLessonBuilder`
+
 - Procedurally generates math, algebra, and sequence lessons with dynamic parameterization.
 - Includes a robust fallback mechanism to ensure uninterrupted learning if procedural generation or local AI models encounter latency timeouts.
 
@@ -74,12 +55,13 @@ Noggimigo operates through a modular four-pillar computational pipeline:
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.10 or higher
 - Standard library dependencies (`json`, `re`, `math`, `time`, `os`, `sys`)
 
 ### Installation
 
-```bash
+```
 # Clone the repository
 git clone https://github.com/Noggin-Labs/noggimigo.git
 
@@ -89,12 +71,8 @@ cd noggimigo
 # Run the local interactive CLI tutor
 python -m noggimigo.Noggimigo
 ```
-
----
-
 ## 💻 Code Example
-
-```python
+```
 from noggimigo import NoggimigoTutorEngine
 
 # Initialize tutor for basic algebra
@@ -111,17 +89,12 @@ print(response["feedback"])
 # Output: 🔍 Let me guide you: Adding 4 to both sides gives 2x + 8 = 14, which moves further away! Try subtracting 4.
 #         💡 Socratic Guidance (INVERSE_ERROR): Applied addition instead of subtraction (or vice versa).
 
-print("Efficiency:", response["nfot_telemetry"]["efficiency"])
-# Output: 0.55
+print("Latency:", response["latency_ms"])
+# Output: 35.0
 ```
-
----
-
 ## 📊 Telemetry Output Schema
-
-Every interaction returns a structured payload containing both pedagogical and biophysical metrics:
-
-```json
+Every interaction returns a structured payload containing pedagogical metrics and latency data:
+```
 {
   "concept": "algebra_intro",
   "node": "step_1",
@@ -129,29 +102,14 @@ Every interaction returns a structured payload containing both pedagogical and b
   "error_type": "INVERSE_ERROR",
   "feedback": "🔍 Let me guide you: Adding 4 to both sides gives 2x + 8 = 14...",
   "completed": false,
-  "nfot_telemetry": {
-    "write_back_gap_ms": 35.0,
-    "efficiency": 0.55,
-    "abeth_bias": "POTENTIATION_FAVORED",
-    "tbr": 1.15,
-    "cognitive_state": "HIGH_FOCUS",
-    "learning_prediction": {
-      "predicted_retention_score": 0.678,
-      "readiness_zone": "OPTIMAL_MASTERY_ZONE",
-      "recommendation": "Pace standard or accelerated learning steps."
-    }
-  }
+  "latency_ms": 35.0
 }
 ```
+## 📄 Related Work
+Noggimigo's Socratic scaffolding approach is informed by the literature on theory-guided tutoring systems. For a survey of AI tutoring paradigms, neural solvers, and student simulation frameworks, see:
 
----
-
-## 📄 Preprints & Theoretical References
-
-1. Kassim, F. A. (2026). *Neural Feedback Optimization Theory*. Zenodo. [DOI: 10.5281/zenodo.21872418](https://doi.org/10.5281/zenodo.21872418)
-2. Yang, K., Wang, C., Galley, M., Singh, C., Inala, J. P., Zhai, C., & Gao, J. (2026). _StudentSim: Training LLM-based Student Simulators_. [ArXiv](https://arxiv.org/abs/2609.01591). 
----
+- Kassim, F. A. (2026). Your LLM is an Incompetent AI Tutoring System. Zenodo. DOI: 10.5281/zenodo.22975179  
+- Yang, K., Wang, C., Galley, M., Singh, C., Inala, J. P., Zhai, C., & Gao, J. (2026). StudentSim: Training LLM-based Student Simulators. arXiv.
 
 ## 📜 License
-
-This project is open-source software licensed under the **MIT License**.
+This project is open-source software licensed under the MIT License.

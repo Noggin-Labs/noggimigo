@@ -4,7 +4,7 @@ Noggimigo is an open-source local tutoring runtime. Its deterministic lesson eng
 
 ## Implemented runtime
 
-The package now provides a reusable `NoggimigoSession`, exact fraction/decimal/text verification, bounded session history, hints, reset, progress indicators, configurable presentation preferences, an auditable event log, and a command-line interface. Each curriculum item declares knowledge components; answer outcomes update an interpretable BKT estimate and a lightweight MIRT-style next-response baseline. Supported curriculum is intentionally explicit and currently includes `fractions_intro`, `algebra_intro`, and `patterns_sequences`.
+The package now provides a reusable `NoggimigoSession`, exact fraction/decimal/text verification, bounded session history, hints, reset, progress indicators, configurable presentation preferences, an auditable event log, and a command-line interface. Each curriculum item declares knowledge components; answer outcomes update an interpretable BKT estimate and a lightweight MIRT-style next-response baseline. Dependency-free Brier score, expected calibration error, and monotonicity metrics are available for held-out evaluation. Supported curriculum is intentionally explicit and currently includes `fractions_intro`, `algebra_intro`, and `patterns_sequences`.
 
 The optional adapter defaults to `Qwen/Qwen3-0.6B`, loads lazily, supports mocked inference in tests, validates structured JSON responses, and falls back to deterministic feedback if dependencies, weights, or hardware are unavailable. Ordinary tests do not download model weights.
 
@@ -55,6 +55,8 @@ Tests cover imports, equivalent fractions, invalid fractions and division by zer
 NFOT-related research code remains separate from tutoring correctness. Ordinary response time is not relabeled as a biological Write-Back Gap, and this package does not infer attention, fatigue, intelligence, retention, disability, or diagnosis. Presentation preferences are user-controlled scaffolding options rather than diagnostic labels.
 
 The current curriculum is mathematics only and intentionally small. New curriculum should be added as explicit data with deterministic answer checks and tests. The project is MIT licensed.
+
+The proposed validation plan is documented in [`docs/mastery-study-protocol.md`](docs/mastery-study-protocol.md).
 
 ### Research boundary
 

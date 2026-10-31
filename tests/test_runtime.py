@@ -2,6 +2,7 @@ import json
 import importlib
 import pytest
 from noggimigo.answer_verifier import verify_answer
+from noggimigo.evaluation import brier_score, expected_calibration_error, monotonicity_violation_rate
 from noggimigo.mastery import BKTParameters, BKTState, MasteryTracker
 from noggimigo.session import NoggimigoSession
 from noggimigo.hf_provider import HuggingFaceLocalTutor
@@ -91,3 +92,11 @@ def test_session_exposes_mastery_and_records_answer_event():
     assert "mastery" in result
     assert result["mastery"]["bkt"]["part_whole"] < 0.2
     assert session.history[-1]["knowledge_components"] == ["part_whole", "fraction_notation"]
+
+
+def test_study_metrics_are_deterministic_and_bounded():
+    predictions = [0.1, 0.8, 0.9, 0.2]
+    outcomes = [False, True, True, False]
+    assert brier_score(predictions, outcomes) == pytest.approx(0.025)
+    assert expected_calibration_error(predictions, outcomes, bins=2) == pytest.approx(0.15)
+    assert monotonicity_violation_rate([0.1, 0.2, 0.15, 0.4]) == pytest.approx(1 / 3)

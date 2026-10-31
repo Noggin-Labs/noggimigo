@@ -1,3 +1,4 @@
+
 """Optional local Hugging Face model adapter for Noggimigo.
 
 This module deliberately does not replace Noggimigo's deterministic lesson,
@@ -13,6 +14,7 @@ from contextlib import nullcontext
 from typing import Any, Callable, Optional
 
 DEFAULT_MODEL_ID = "Qwen/Qwen3-0.6B"
+MAX_MISCONCEPTION_CANDIDATES = 3
 
 PEDAGOGICAL_ACTIONS = {
     "ASK_GUIDING_QUESTION",
@@ -63,6 +65,7 @@ def build_messages(
         "lesson_context": lesson_context or {},
         "deterministic_feedback": deterministic_feedback,
     }
+
     user_content = (
         "Lesson context (JSON):\n"
         + json.dumps(context, ensure_ascii=False, sort_keys=True)
@@ -72,6 +75,7 @@ def build_messages(
         + learner_response
         + "\nRespond with the required JSON object only."
     )
+
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_content},
@@ -79,12 +83,24 @@ def build_messages(
 
 
 def parse_model_output(raw: str) -> dict[str, Any]:
-    """Parse and validate the small output contract; reject malformed output."""
+    """Parse and validate the model output contract; reject malformed output."""
+    if not isinstance(raw, str):
+        raise ModelOutputError("Model output must be a string.")
+
     candidate = raw.strip()
+
+    if not candidate:
+        raise ModelOutputError("Model output was empty.")
+
     # Permit a fenced JSON response, but no surrounding explanatory prose.
-    fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", candidate, flags=re.S | re.I)
+    fenced = re.fullmatch(
+        r"```(?:json)?\s*(.*?)\s*```",
+        candidate,
+        flags=re.S | re.I,
+    )
     if fenced:
         candidate = fenced.group(1)
+
     try:
         data = json.loads(candidate)
     except json.JSONDecodeError as exc:
@@ -96,18 +112,39 @@ def parse_model_output(raw: str) -> dict[str, Any]:
         "misconception_candidates",
         "requires_verification",
     }
+
     if not isinstance(data, dict) or set(data) != required:
         raise ModelOutputError("Model output did not match the required keys.")
-    if not isinstance(data["student_facing_message"], str) or not data["student_facing_message"].strip():
-        raise ModelOutputError("student_facing_message must be a non-empty string.")
-    if data["pedagogical_action"] not in PEDAGOGICAL_ACTIONS:
+
+    message = data["student_facing_message"]
+    if not isinstance(message, str) or not message.strip():
+        raise ModelOutputError(
+            "student_facing_message must be a non-empty string."
+        )
+
+    action = data["pedagogical_action"]
+    if not isinstance(action, str) or action not in PEDAGOGICAL_ACTIONS:
         raise ModelOutputError("Unknown pedagogical_action.")
-    if not isinstance(data["misconception_candidates"], list) or not all(
-        isinstance(x, str) for x in data["misconception_candidates"]
+
+    candidates = data["misconception_candidates"]
+    if (
+        not isinstance(candidates, list)
+        or len(candidates) > MAX_MISCONCEPTION_CANDIDATES
+        or not all(
+            isinstance(item, str) and item.strip()
+            for item in candidates
+        )
     ):
-        raise ModelOutputError("misconception_candidates must be a list of strings.")
+        raise ModelOutputError(
+            "misconception_candidates must contain at most three "
+            "non-empty strings."
+        )
+
     if not isinstance(data["requires_verification"], bool):
-        raise ModelOutputError("requires_verification must be a boolean.")
+        raise ModelOutputError(
+            "requires_verification must be a boolean."
+        )
+
     return data
 
 
@@ -121,6 +158,16 @@ class HuggingFaceLocalTutor:
         max_new_tokens: int = 180,
         loader: Optional[Callable[..., tuple[Any, Any]]] = None,
     ):
+        if not isinstance(model_id, str) or not model_id.strip():
+            raise ValueError("model_id must be a non-empty string.")
+
+        if (
+            not isinstance(max_new_tokens, int)
+            or isinstance(max_new_tokens, bool)
+            or max_new_tokens <= 0
+        ):
+            raise ValueError("max_new_tokens must be a positive integer.")
+
         self.model_id = model_id
         self.max_new_tokens = max_new_tokens
         self._loader = loader
@@ -130,9 +177,13 @@ class HuggingFaceLocalTutor:
     def _load(self) -> None:
         if self._model is not None:
             return
+
         if self._loader is not None:
             self._tokenizer, self._model = self._loader(self.model_id)
+            if self._tokenizer is None or self._model is None:
+                raise RuntimeError("The custom model loader returned an invalid pair.")
             return
+
         try:
             import torch
             from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -161,6 +212,7 @@ class HuggingFaceLocalTutor:
         deterministic_feedback: Optional[str] = None,
     ) -> dict[str, Any]:
         self._load()
+
         messages = build_messages(
             prompt,
             learner_response,
@@ -169,12 +221,14 @@ class HuggingFaceLocalTutor:
             lesson_context=lesson_context,
             deterministic_feedback=deterministic_feedback,
         )
+
         encoded = self._tokenizer.apply_chat_template(
             messages,
             tokenize=True,
             add_generation_prompt=True,
             return_tensors="pt",
         )
+
         # Move inputs to the model's input device without assuming CUDA exists.
         input_device = getattr(self._model, "device", None)
         if input_device is not None:
@@ -184,8 +238,9 @@ class HuggingFaceLocalTutor:
             import torch
             inference_context = torch.inference_mode()
         except ImportError:
-            # Mock loaders are intentionally usable without heavyweight dependencies.
+            # Mock loaders remain usable without heavyweight dependencies.
             inference_context = nullcontext()
+
         with inference_context:
             output = self._model.generate(
                 encoded,
@@ -193,6 +248,11 @@ class HuggingFaceLocalTutor:
                 do_sample=False,
                 pad_token_id=self._tokenizer.eos_token_id,
             )
+
         new_tokens = output[0][encoded.shape[-1]:]
-        raw = self._tokenizer.decode(new_tokens, skip_special_tokens=True)
+        raw = self._tokenizer.decode(
+            new_tokens,
+            skip_special_tokens=True,
+        )
+
         return parse_model_output(raw)

@@ -4,6 +4,7 @@
 
 **Noggimigo** is a Python-based tutoring runtime designed to help learners understand concepts through guided reasoning rather than simply receiving answers.
 
+The package now provides a reusable `NoggimigoSession`, exact fraction/decimal/text verification, bounded session history, hints, reset, progress indicators, configurable presentation preferences, an auditable event log, and a command-line interface. Each curriculum item declares knowledge components; answer outcomes update an interpretable BKT estimate and a lightweight MIRT-style next-response baseline. Dependency-free Brier score, expected calibration error, and monotonicity metrics are available for held-out evaluation. Supported curriculum is intentionally explicit and currently includes `fractions_intro`, `algebra_intro`, and `patterns_sequences`.
 Its central design principle is that an AI tutor should adapt its teaching approach to the learner without surrendering educational correctness to a language model.
 
 Noggimigo combines deterministic lesson progression, mathematical answer verification, misconception-aware feedback, configurable teaching preferences, and an optional locally executed language model.
@@ -373,6 +374,7 @@ Run the test suite:
 pytest -q
 ```
 
+Tests cover imports, equivalent fractions, invalid fractions and division by zero, hints, reset, bounded history, incorrect-answer progression protection, mocked structured model generation, deterministic fallback, BKT updates, MIRT-style prediction, and mastery event logging. Real Qwen inference is not claimed by the unit tests.
 The existing tests cover:
 
 - Public package imports.
@@ -519,4 +521,11 @@ We are building toward educational technology that supports different ways of th
 
 **Different ways of thinking. More ways to learn.**
 
+The current curriculum is mathematics only and intentionally small. New curriculum should be added as explicit data with deterministic answer checks and tests. The project is MIT licensed.
+
+The proposed validation plan is documented in [`docs/mastery-study-protocol.md`](docs/mastery-study-protocol.md).
+
+### Research boundary
+
+The mastery module is an online baseline for study instrumentation, not a validated psychometric instrument. Its BKT and MIRT-style estimates must be fit, calibrated, and evaluated on held-out learner responses before being used for consequential decisions. The runtime does not infer attention, fatigue, emotion, disability, intelligence, retention, or biological state from response time or text.
 [GitHub Repository](https://github.com/Noggin-Labs/noggimigo) · [Report an Issue](https://github.com/Noggin-Labs/noggimigo/issues)

@@ -2,6 +2,8 @@ import json
 import importlib
 import pytest
 from noggimigo.answer_verifier import verify_answer
+from noggimigo.evaluation import brier_score, expected_calibration_error, monotonicity_violation_rate
+from noggimigo.mastery import BKTParameters, BKTState, MasteryTracker
 from noggimigo.session import NoggimigoSession
 from noggimigo.hf_provider import HuggingFaceLocalTutor
 
@@ -63,3 +65,38 @@ def test_mocked_model_structured_output():
                 def __getitem__(self, i): return [0]
             return O()
     assert HuggingFaceLocalTutor(loader=lambda _: (Tokenizer(), Model())).generate("q", "a")==good
+
+
+def test_bkt_correct_response_increases_mastery_and_wrong_response_updates_state():
+    state = BKTState(BKTParameters(p_init=0.2, p_learn=0.1, p_guess=0.2, p_slip=0.1))
+    before = state.p_mastery
+    state.update(True)
+    after_correct = state.p_mastery
+    state.update(False)
+    assert after_correct > before
+    assert state.p_mastery < after_correct
+    assert state.observations == 2
+
+
+def test_mastery_tracker_returns_bkt_and_mirt_predictions():
+    tracker = MasteryTracker(["fractions"])
+    event = tracker.observe(["fractions"], correct=True)
+    assert event["bkt_mastery"]["fractions"] > 0.2
+    assert 0.0 < event["mirt_prediction"] < 1.0
+    assert tracker.mirt_snapshot()["fractions"] > 0.0
+
+
+def test_session_exposes_mastery_and_records_answer_event():
+    session = NoggimigoSession("fractions_intro")
+    result = session.submit("3/4")
+    assert "mastery" in result
+    assert result["mastery"]["bkt"]["part_whole"] < 0.2
+    assert session.history[-1]["knowledge_components"] == ["part_whole", "fraction_notation"]
+
+
+def test_study_metrics_are_deterministic_and_bounded():
+    predictions = [0.1, 0.8, 0.9, 0.2]
+    outcomes = [False, True, True, False]
+    assert brier_score(predictions, outcomes) == pytest.approx(0.025)
+    assert expected_calibration_error(predictions, outcomes, bins=2) == pytest.approx(0.15)
+    assert monotonicity_violation_rate([0.1, 0.2, 0.15, 0.4]) == pytest.approx(1 / 3)

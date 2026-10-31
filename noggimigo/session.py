@@ -1,9 +1,13 @@
 """Integrated Noggimigo session runtime."""
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
-from .curriculum import CURRICULUM
+
 from .answer_verifier import verify_answer
+from .curriculum import CURRICULUM
+from .mastery import MasteryTracker
+
 
 @dataclass
 class TeachingPreferences:
@@ -12,8 +16,10 @@ class TeachingPreferences:
     hint_intensity: int = 1
     show_progress: bool = True
 
+
 class NoggimigoSession:
-    """Authoritative deterministic lesson state with optional model suggestions."""
+    """Authoritative lesson state with optional model suggestions and mastery estimates."""
+
     def __init__(self, lesson_id: str = "fractions_intro", *, model=None, preferences=None, history_limit: int = 30):
         self.model = model
         self.preferences = preferences or TeachingPreferences()
@@ -28,6 +34,8 @@ class NoggimigoSession:
         self.lesson = CURRICULUM[self.lesson_id]
         self.index = 0
         self.history: list[dict[str, Any]] = []
+        components = [component for node in self.lesson["nodes"] for component in node.get("knowledge_components", [])]
+        self.mastery = MasteryTracker(components)
         return self.current_prompt()
 
     @property
@@ -36,12 +44,15 @@ class NoggimigoSession:
 
     def current_prompt(self) -> dict[str, Any]:
         if self.complete:
-            return {"completed": True, "message": "Lesson complete. Nice work!"}
+            return {"completed": True, "message": "Lesson complete. Nice work!", "mastery": self.mastery.snapshot()}
         node = self.lesson["nodes"][self.index]
-        result = {"completed": False, "lesson_id": self.lesson_id, "title": self.lesson["title"], "question": node["question"], "progress": f"{self.index + 1}/{len(self.lesson['nodes'])}"}
+        result = {"completed": False, "lesson_id": self.lesson_id, "title": self.lesson["title"], "question": node["question"], "progress": f"{self.index + 1}/{len(self.lesson['nodes'])}", "mastery": self.mastery.snapshot()}
         if self.preferences.short_messages:
             result["question"] = result["question"].replace("What fraction is unshaded?", "What fraction is left?")
         return result
+
+    def mastery_snapshot(self) -> dict[str, Any]:
+        return {"bkt": self.mastery.snapshot(), "mirt_ability": self.mastery.mirt_snapshot()}
 
     def _record(self, event: dict[str, Any]) -> None:
         self.history.append(event)
@@ -60,7 +71,9 @@ class NoggimigoSession:
             return {"status": "COMPLETE", "feedback": "This lesson is already complete.", "advanced": False}
         node = self.lesson["nodes"][self.index]
         check = verify_answer(answer, node["answer"])
-        if check.status == "CORRECT":
+        is_correct = check.status == "CORRECT"
+        mastery_event = self.mastery.observe(node["knowledge_components"], correct=is_correct)
+        if is_correct:
             self.index += 1
             result = {"status": "CORRECT", "feedback": "Correct. Now let’s take the next step." if not self.complete else "Correct. You completed the lesson!", "advanced": True, "completed": self.complete, "next_prompt": self.current_prompt()}
         else:
@@ -68,7 +81,8 @@ class NoggimigoSession:
             if check.status == "AMBIGUOUS":
                 feedback = check.reason
             result = {"status": check.status, "feedback": feedback, "advanced": False, "completed": False, "next_prompt": self.current_prompt()}
-        self._record({"type": "answer", "answer": answer, **result})
+        result["mastery"] = self.mastery_snapshot()
+        self._record({"type": "answer", "answer": answer, "knowledge_components": node["knowledge_components"], "correct": is_correct, "mastery_event": mastery_event, **result})
         if self.model and result["status"] != "COMPLETE":
             try:
                 suggestion = self.model.generate(node["question"], answer, subject=self.lesson["subject"], lesson_context={"title": self.lesson["title"], "objective": self.lesson["objective"]}, deterministic_feedback=result["feedback"])

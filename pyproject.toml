@@ -32,6 +32,11 @@ dependencies = [
 ]
 
 
+[project.optional-dependencies]
+hf = ["transformers>=4.51.0", "torch>=2.6.0", "accelerate>=1.2.0"]
+test = ["pytest>=8.0"]
+
+
 [project.urls]
 Homepage = "https://github.com/Noggin-Labs/noggimigo"
 Issues = "https://github.com/Noggin-Labs/noggimigo/issues"
@@ -42,6 +47,7 @@ exclude = ["tests*", "docs*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 python_files = ["test_*.py"]
 addopts = "-ra --strict-markers --strict-config"
 markers = [

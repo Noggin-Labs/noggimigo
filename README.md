@@ -1,115 +1,57 @@
-# Noggimigo 🧠
+# Noggimigo
 
-> **Local Socratic AI Tutoring Engine with Latency Tracking for Special Educational Needs**
+Noggimigo is an open-source local tutoring runtime. Its deterministic lesson engine owns answer verification and lesson progression. An optional local Hugging Face model can suggest concise Socratic language, but model output is validated and cannot mark an answer correct or advance a lesson.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+## Implemented runtime
 
----
+The package now provides a reusable `NoggimigoSession`, exact fraction/decimal/text verification, bounded session history, hints, reset, progress indicators, configurable presentation preferences, and a command-line interface. Supported curriculum is intentionally explicit and currently includes `fractions_intro`, `algebra_intro`, and `patterns_sequences`.
 
-## 📌 Overview
+The optional adapter defaults to `Qwen/Qwen3-0.6B`, loads lazily, supports mocked inference in tests, validates structured JSON responses, and falls back to deterministic feedback if dependencies, weights, or hardware are unavailable. Ordinary tests do not download model weights.
 
-**Noggimigo** is an open-source, local Socratic AI tutoring engine created by Folarera Kassim for [Noggin Labs](https://github.com/Noggin-Labs).
+## Installation and CLI
 
-Unlike conventional conversational models that directly output solutions, Noggimigo acts as a step-by-step Socratic coach. It decomposes mathematical and logical concepts into micro-steps, diagnoses specific conceptual misconceptions using a structured error taxonomy, and tracks interaction latency at the trial level.
-
-Noggimigo is designed for special education workflows, with accommodation adapters for **ADHD**, **Autism**, and **Dyslexia**.
-
----
-
-## 🔬 Core Architecture
-
-Noggimigo operates through a modular pipeline:
-
-### 1. `SocraticReasoningCore`
-
-- **Semantic Intent Classifier:** Classifies student intent using local semantic matching, without relying on cloud LLM APIs.
-- **Misconception Error Taxonomy:** Diagnoses procedural and conceptual errors including:
-  - `INVERSION_ERROR`: Swapped numerator/denominator or parts of a whole.
-  - `HALVING_ERROR` / `HALF_ERROR`: Off-by-one division in remaining equal slices, or incorrect half assumptions.
-  - `INVERSE_ERROR`: Applied addition instead of subtraction (or vice versa).
-  - `ORDER_ERROR`: Out-of-sequence algebraic steps.
-  - `MULTIPLY_ERROR` & `DOUBLING_ERROR`: Factor reduction and scale mistakes.
-  - `CONCEPTUAL_GAP`: General foundational understanding gaps.
-- **Micro-Step Scaffolding:** Breaks multi-step problems (algebra, fractions, pattern recognition) into guided sub-questions.
-
-### 2. `LatencyTracker`
-
-- **Write-Back Gap ($L$):** Measures the real-time interval between a prompt and the student's response ($L = t_{\text{response}} - t_{\text{prompt}}$).
-- **Distributional Logging:** Records the full distribution of $L$, not just the mean, so that variance and tail behavior can be examined.
-- **Note:** The relationship between $L$ and learning outcomes is a hypothesis under investigation in [NFOT](https://github.com/Noggin-Labs/NFOT). It is not an established mechanism.
-
-### 3. `DisabilityScaffoldAdapter`
-
-- **ADHD Profile:** 1-step micro-chunks, no countdown timers, more frequent encouragement.
-- **Autism Profile:** Predictable layouts, literal phrasing, explicit step-by-step guidance.
-- **Dyslexia Profile:** Wide font spacing, simplified reading levels, native TTS accessibility hooks.
-
-### 4. `LessonGenerator` & `NogginLessonBuilder`
-
-- Procedurally generates math, algebra, and sequence lessons with dynamic parameterization.
-- Includes a robust fallback mechanism to ensure uninterrupted learning if procedural generation or local AI models encounter latency timeouts.
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.10 or higher
-- Standard library dependencies (`json`, `re`, `math`, `time`, `os`, `sys`)
-
-### Installation
-
-```
-# Clone the repository
+```bash
 git clone https://github.com/Noggin-Labs/noggimigo.git
-
-# Navigate into the repository directory
 cd noggimigo
-
-# Run the local interactive CLI tutor
-python -m noggimigo.Noggimigo
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+python -m noggimigo.cli --lesson fractions_intro
 ```
-## 💻 Code Example
+
+During a lesson, enter `hint`, `reset`, or `exit` as needed.
+
+## Python API
+
+```python
+from noggimigo import NoggimigoSession
+
+session = NoggimigoSession("algebra_intro")
+print(session.current_prompt())
+print(session.submit("subtract 4"))
 ```
-from noggimigo import NoggimigoTutorEngine
 
-# Initialize tutor for basic algebra
-tutor = NoggimigoTutorEngine(active_concept="algebra_intro")
+## Optional local model
 
-# Get current prompt
-print("Noggimigo:", tutor.get_current_prompt())
-# Output: Solve for x: 2x + 4 = 10. What is the first operation to isolate 2x?
+The core package has no model dependency. To use local generation, install the optional dependencies manually:
 
-# Evaluate student input with simulated latency (e.g. 35 ms)
-response = tutor.evaluate_response(user_input="add 4", latency_ms=35.0)
-
-print(response["feedback"])
-# Output: 🔍 Let me guide you: Adding 4 to both sides gives 2x + 8 = 14, which moves further away! Try subtracting 4.
-#         💡 Socratic Guidance (INVERSE_ERROR): Applied addition instead of subtraction (or vice versa).
-
-print("Latency:", response["latency_ms"])
-# Output: 35.0
+```bash
+python -m pip install 'transformers>=4.51.0' 'torch>=2.6.0' 'accelerate>=1.2.0'
 ```
-## 📊 Telemetry Output Schema
-Every interaction returns a structured payload containing pedagogical metrics and latency data:
-```
-{
-  "concept": "algebra_intro",
-  "node": "step_1",
-  "status": "MISCONCEPTION",
-  "error_type": "INVERSE_ERROR",
-  "feedback": "🔍 Let me guide you: Adding 4 to both sides gives 2x + 8 = 14...",
-  "completed": false,
-  "latency_ms": 35.0
-}
-```
-## 📄 Related Work
-Noggimigo's Socratic scaffolding approach is informed by the literature on theory-guided tutoring systems. For a survey of AI tutoring paradigms, neural solvers, and student simulation frameworks, see:
 
-- Kassim, F. A. (2026). Your LLM is an Incompetent AI Tutoring System. Zenodo. DOI: 10.5281/zenodo.22975179  
-- Yang, K., Wang, C., Galley, M., Singh, C., Inala, J. P., Zhai, C., & Gao, J. (2026). StudentSim: Training LLM-based Student Simulators. arXiv.
+Weights are downloaded lazily to the local Transformers cache. CPU use is supported where the selected model permits it; GPU can improve speed. No API token is required by this project, and no student PII or hidden telemetry is collected.
 
-## 📜 License
-This project is open-source software licensed under the MIT License.
+## Testing
+
+```bash
+python -m pip install pytest
+pytest -q
+```
+
+Tests cover imports, equivalent fractions, invalid fractions and division by zero, hints, reset, bounded history, incorrect-answer progression protection, mocked structured model generation, and deterministic fallback. Real Qwen inference is not claimed by the unit tests.
+
+## Scientific and accessibility boundaries
+
+NFOT-related research code remains separate from tutoring correctness. Ordinary response time is not relabeled as a biological Write-Back Gap, and this package does not infer attention, fatigue, intelligence, retention, disability, or diagnosis. Presentation preferences are user-controlled scaffolding options rather than diagnostic labels.
+
+The current curriculum is mathematics only and intentionally small. New curriculum should be added as explicit data with deterministic answer checks and tests. The project is MIT licensed.

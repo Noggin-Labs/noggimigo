@@ -4,7 +4,7 @@ Noggimigo is an open-source local tutoring runtime. Its deterministic lesson eng
 
 ## Implemented runtime
 
-The package now provides a reusable `NoggimigoSession`, exact fraction/decimal/text verification, bounded session history, hints, reset, progress indicators, configurable presentation preferences, and a command-line interface. Supported curriculum is intentionally explicit and currently includes `fractions_intro`, `algebra_intro`, and `patterns_sequences`.
+The package now provides a reusable `NoggimigoSession`, exact fraction/decimal/text verification, bounded session history, hints, reset, progress indicators, configurable presentation preferences, an auditable event log, and a command-line interface. Each curriculum item declares knowledge components; answer outcomes update an interpretable BKT estimate and a lightweight MIRT-style next-response baseline. Supported curriculum is intentionally explicit and currently includes `fractions_intro`, `algebra_intro`, and `patterns_sequences`.
 
 The optional adapter defaults to `Qwen/Qwen3-0.6B`, loads lazily, supports mocked inference in tests, validates structured JSON responses, and falls back to deterministic feedback if dependencies, weights, or hardware are unavailable. Ordinary tests do not download model weights.
 
@@ -48,10 +48,14 @@ python -m pip install pytest
 pytest -q
 ```
 
-Tests cover imports, equivalent fractions, invalid fractions and division by zero, hints, reset, bounded history, incorrect-answer progression protection, mocked structured model generation, and deterministic fallback. Real Qwen inference is not claimed by the unit tests.
+Tests cover imports, equivalent fractions, invalid fractions and division by zero, hints, reset, bounded history, incorrect-answer progression protection, mocked structured model generation, deterministic fallback, BKT updates, MIRT-style prediction, and mastery event logging. Real Qwen inference is not claimed by the unit tests.
 
 ## Scientific and accessibility boundaries
 
 NFOT-related research code remains separate from tutoring correctness. Ordinary response time is not relabeled as a biological Write-Back Gap, and this package does not infer attention, fatigue, intelligence, retention, disability, or diagnosis. Presentation preferences are user-controlled scaffolding options rather than diagnostic labels.
 
 The current curriculum is mathematics only and intentionally small. New curriculum should be added as explicit data with deterministic answer checks and tests. The project is MIT licensed.
+
+### Research boundary
+
+The mastery module is an online baseline for study instrumentation, not a validated psychometric instrument. Its BKT and MIRT-style estimates must be fit, calibrated, and evaluated on held-out learner responses before being used for consequential decisions. The runtime does not infer attention, fatigue, emotion, disability, intelligence, retention, or biological state from response time or text.

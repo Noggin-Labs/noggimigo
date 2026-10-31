@@ -1,4 +1,4 @@
-"""Integrated Noggimigo session runtime."""
+"""Integrated Noggimigo session runtime with authoritative verification."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,6 +7,7 @@ from typing import Any
 from .answer_verifier import verify_answer
 from .curriculum import CURRICULUM
 from .mastery import MasteryTracker
+from .pedagogy import PedagogicalValidationError, validate_suggestion
 
 
 @dataclass
@@ -18,7 +19,7 @@ class TeachingPreferences:
 
 
 class NoggimigoSession:
-    """Authoritative lesson state with optional model suggestions and mastery estimates."""
+    """Authoritative lesson state with optional, untrusted model suggestions."""
 
     def __init__(self, lesson_id: str = "fractions_intro", *, model=None, preferences=None, history_limit: int = 30):
         self.model = model
@@ -83,12 +84,32 @@ class NoggimigoSession:
             result = {"status": check.status, "feedback": feedback, "advanced": False, "completed": False, "next_prompt": self.current_prompt()}
         result["mastery"] = self.mastery_snapshot()
         self._record({"type": "answer", "answer": answer, "knowledge_components": node["knowledge_components"], "correct": is_correct, "mastery_event": mastery_event, **result})
-        if self.model and result["status"] != "COMPLETE":
+
+        if self.model is not None:
             try:
-                suggestion = self.model.generate(node["question"], answer, subject=self.lesson["subject"], lesson_context={"title": self.lesson["title"], "objective": self.lesson["objective"]}, deterministic_feedback=result["feedback"])
-                if suggestion["requires_verification"] and suggestion["student_facing_message"]:
-                    result["model_message"] = suggestion["student_facing_message"]
-                    result["pedagogical_action"] = suggestion["pedagogical_action"]
+                suggestion = self.model.generate(
+                    node["question"],
+                    answer,
+                    subject=self.lesson["subject"],
+                    lesson_context={"title": self.lesson["title"], "objective": self.lesson["objective"]},
+                    deterministic_feedback=result["feedback"],
+                )
             except Exception:
+                # Provider failures are expected to be recoverable; deterministic
+                # verification and progression have already completed.
                 result["model_fallback"] = True
+            else:
+                try:
+                    validated = validate_suggestion(
+                        suggestion,
+                        answer_status=check.status,
+                        expected_answer=node["answer"],
+                        progression_verified=is_correct,
+                        lesson_complete_verified=self.complete,
+                    )
+                except PedagogicalValidationError:
+                    result["model_fallback"] = True
+                else:
+                    result["model_message"] = validated["student_facing_message"]
+                    result["pedagogical_action"] = validated["pedagogical_action"]
         return result

@@ -6,6 +6,7 @@ answer-checking, misconception, or accommodation logic. It generates a
 candidate tutoring utterance; the application remains responsible for checking
 answers and deciding whether the utterance is safe and pedagogically valid.
 """
+
 from __future__ import annotations
 
 import json
@@ -59,6 +60,7 @@ def build_messages(
     deterministic_feedback: Optional[str] = None,
 ) -> list[dict[str, str]]:
     """Build a minimal, non-identifying prompt; do not include learner PII."""
+
     context = {
         "subject": subject,
         "level": level,
@@ -84,6 +86,7 @@ def build_messages(
 
 def parse_model_output(raw: str) -> dict[str, Any]:
     """Parse and validate the model output contract; reject malformed output."""
+
     if not isinstance(raw, str):
         raise ModelOutputError("Model output must be a string.")
 
@@ -98,13 +101,16 @@ def parse_model_output(raw: str) -> dict[str, Any]:
         candidate,
         flags=re.S | re.I,
     )
+
     if fenced:
         candidate = fenced.group(1)
 
     try:
         data = json.loads(candidate)
     except json.JSONDecodeError as exc:
-        raise ModelOutputError("Model output was not valid JSON.") from exc
+        raise ModelOutputError(
+            "Model output was not valid JSON."
+        ) from exc
 
     required = {
         "student_facing_message",
@@ -114,19 +120,24 @@ def parse_model_output(raw: str) -> dict[str, Any]:
     }
 
     if not isinstance(data, dict) or set(data) != required:
-        raise ModelOutputError("Model output did not match the required keys.")
+        raise ModelOutputError(
+            "Model output did not match the required keys."
+        )
 
     message = data["student_facing_message"]
+
     if not isinstance(message, str) or not message.strip():
         raise ModelOutputError(
             "student_facing_message must be a non-empty string."
         )
 
     action = data["pedagogical_action"]
+
     if not isinstance(action, str) or action not in PEDAGOGICAL_ACTIONS:
         raise ModelOutputError("Unknown pedagogical_action.")
 
     candidates = data["misconception_candidates"]
+
     if (
         not isinstance(candidates, list)
         or len(candidates) > MAX_MISCONCEPTION_CANDIDATES
@@ -166,7 +177,9 @@ class HuggingFaceLocalTutor:
             or isinstance(max_new_tokens, bool)
             or max_new_tokens <= 0
         ):
-            raise ValueError("max_new_tokens must be a positive integer.")
+            raise ValueError(
+                "max_new_tokens must be a positive integer."
+            )
 
         self.model_id = model_id
         self.max_new_tokens = max_new_tokens
@@ -180,8 +193,12 @@ class HuggingFaceLocalTutor:
 
         if self._loader is not None:
             self._tokenizer, self._model = self._loader(self.model_id)
+
             if self._tokenizer is None or self._model is None:
-                raise RuntimeError("The custom model loader returned an invalid pair.")
+                raise RuntimeError(
+                    "The custom model loader returned an invalid pair."
+                )
+
             return
 
         try:
@@ -190,15 +207,19 @@ class HuggingFaceLocalTutor:
         except ImportError as exc:
             raise RuntimeError(
                 "Local model dependencies are missing. Install the optional "
-                "requirements in requirements-hf-local.txt."
+                "Hugging Face dependencies before using this provider."
             ) from exc
 
-        self._tokenizer = AutoTokenizer.from_pretrained(self.model_id)
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            self.model_id
+        )
+
         self._model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
             torch_dtype="auto",
             device_map="auto",
         )
+
         self._model.eval()
 
     def generate(
@@ -211,6 +232,8 @@ class HuggingFaceLocalTutor:
         lesson_context: Optional[dict[str, Any]] = None,
         deterministic_feedback: Optional[str] = None,
     ) -> dict[str, Any]:
+        """Generate and validate one candidate tutoring response."""
+
         self._load()
 
         messages = build_messages(
@@ -222,15 +245,18 @@ class HuggingFaceLocalTutor:
             deterministic_feedback=deterministic_feedback,
         )
 
+        # return_dict=True produces a BatchEncoding object.
         encoded = self._tokenizer.apply_chat_template(
             messages,
             tokenize=True,
             add_generation_prompt=True,
             return_tensors="pt",
+            return_dict=True,
         )
 
-        # Move inputs to the model's input device without assuming CUDA exists.
+        # Move tokenized inputs to the model's input device.
         input_device = getattr(self._model, "device", None)
+
         if input_device is not None:
             encoded = encoded.to(input_device)
 
@@ -238,18 +264,20 @@ class HuggingFaceLocalTutor:
             import torch
             inference_context = torch.inference_mode()
         except ImportError:
-            # Mock loaders remain usable without heavyweight dependencies.
             inference_context = nullcontext()
 
         with inference_context:
             output = self._model.generate(
-                encoded,
+                **encoded,
                 max_new_tokens=self.max_new_tokens,
                 do_sample=False,
                 pad_token_id=self._tokenizer.eos_token_id,
             )
 
-        new_tokens = output[0][encoded.shape[-1]:]
+        # Extract only newly generated tokens, not the input prompt.
+        input_length = encoded["input_ids"].shape[-1]
+        new_tokens = output[0][input_length:]
+
         raw = self._tokenizer.decode(
             new_tokens,
             skip_special_tokens=True,

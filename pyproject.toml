@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "noggimigo"
 version = "0.0.1"
-description = "Closed-loop Socratic AI tutor for special education students and theoretical neuroscience research."
+description = "Closed-loop Socratic AI tutor for special education students and computational neuroscience research."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -13,29 +13,51 @@ requires-python = ">=3.10"
 authors = [
     { name = "noggimigo contributors" },
 ]
-keywords = ["special-education", "ai-tutoring", "python3", "nfot", "adaptive-learning"]
+keywords = [
+    "special-education",
+    "ai-tutoring",
+    "python3",
+    "nfot",
+    "adaptive-learning",
+    "chess",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Intended Audience :: Scientific Research and Special Education",
+    "Intended Audience :: Education",
+    "Intended Audience :: Computational Neuroscience/Research",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Topic :: Theoretical Neuroscience:: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Education",
 ]
+
 dependencies = [
-    # Pure-Python core. Heavy ML deps live in optional extras. Everything here
-    # is imported by the package; a dependency nothing imports is a promise
-    # about the environment that nothing checks.
     "pyyaml>=6.0",
     "numpy>=1.24",
 ]
 
-
 [project.optional-dependencies]
-hf = ["transformers>=4.51.0", "torch>=2.6.0", "accelerate>=1.2.0"]
-test = ["pytest>=8.0"]
+hf = [
+    "transformers>=4.51.0",
+    "torch>=2.6.0",
+    "accelerate>=1.2.0",
+]
 
+chess = [
+    "python-chess>=1.999",
+]
+
+test = [
+    "pytest>=8.0",
+]
+
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.9.0",
+    "mypy>=1.14.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/Noggin-Labs/noggimigo"
@@ -51,10 +73,10 @@ pythonpath = ["."]
 python_files = ["test_*.py"]
 addopts = "-ra --strict-markers --strict-config"
 markers = [
-    "slow: marks tests as slow (run with `pytest -m slow`)",
-    "e2e: marks tests as end-to-end (run manually; not on CI)",
+    "slow: marks tests as slow",
+    "e2e: marks tests as end-to-end",
     "needs_gpu: marks tests that require a CUDA device",
-    "needs_internet: marks tests that need network access (model / data download)",
+    "needs_internet: marks tests that need network access",
 ]
 
 [tool.ruff]
@@ -64,14 +86,12 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "PL", "RUF"]
 ignore = [
-    "PLR0913",  # too many arguments — common in dataclass __init__ via keyword
-    "PLR2004",  # magic number — readable as inline constants in metric impls
+    "PLR0913",
+    "PLR2004",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# The judge's two prompts are reproduced verbatim from the run that produced
-# the recorded labels, so their lines cannot be rewrapped.
-"studentsim/tutor_rl/judge.py" = ["E501"]
+"noggimigo/tutor_rl/judge.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.10"

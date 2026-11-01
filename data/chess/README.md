@@ -1,42 +1,84 @@
-# Chess data
+# Noggimigo Chess Tutor
 
-Source corpus: the Lichess May 2025 standard-time-control export, released CC0.
-That licence lets the derived records be redistributed directly, so the training
-and evaluation files are published separately from the code and nothing needs to
-be rebuilt on your side. The upload has not landed yet.
+A chess-learning module for **Noggimigo**, designed to teach chess through guided reasoning rather than simply providing the best move.
 
-## Download
+## Overview
 
-The `<HF_ORG>/<HF_DATASET>` placeholder will be replaced with the real dataset
-path when the upload lands.
+Noggimigo Chess Tutor aims to help learners understand chess positions, evaluate decisions, recognize tactical patterns, and develop strategic thinking through Socratic dialogue.
+
+Instead of immediately revealing solutions, the tutor encourages learners to reason about the consequences of their moves.
+
+## Design Principles
+
+- **Reasoning before answers:** Encourage learners to discover ideas independently.
+- **Legality first:** Chess rules and move validation must be handled by deterministic chess software.
+- **Evidence-based explanations:** Distinguish verified chess facts from engine evaluations and instructional interpretations.
+- **One question at a time:** Keep tutoring interactions focused and manageable.
+- **No unsupported assumptions:** Never infer a learner's intelligence, disability, attention, or emotional state from their chess performance.
+
+## Planned Capabilities
+
+| Capability            | Description                                             |
+| --------------------- | ------------------------------------------------------- |
+| Board understanding   | Interpret chess positions and board coordinates         |
+| Legal move validation | Verify moves against official chess rules               |
+| Guided lessons        | Teach chess concepts through structured lessons         |
+| Tactical recognition  | Introduce forks, pins, skewers, and discovered attacks  |
+| Strategic reasoning   | Explore development, king safety, and centre control    |
+| Game analysis         | Explain candidate moves and positional consequences     |
+| Progress tracking     | Record lesson completion and demonstrated understanding |
+
+## Proposed Architecture
+
+The module is intended to integrate with Noggimigo's existing tutoring pipeline.
+
+- **Chess rules:** `python-chess`
+- **Board representation:** FEN
+- **Move notation:** Standard Algebraic Notation (SAN)
+- **Engine analysis:** Stockfish (planned)
+- **Teaching dialogue:** Noggimigo's language-model provider
+- **Validation:** Deterministic checks independent of generated dialogue
+
+The language model must not be treated as the authority on legal moves or chess outcomes.
+
+## Learning Curriculum
+
+1. Chessboard coordinates and orientation
+2. Piece movement and captures
+3. Check, checkmate, and stalemate
+4. Material values and exchanges
+5. Opening principles
+6. Tactical patterns
+7. King safety and positional play
+8. Basic endgames
+9. Game analysis and reflection
+
+## Output and Verification
+
+Teaching responses should distinguish between:
+
+- **Verified facts:** Legal moves, checks, captures, and game outcomes.
+- **Engine evaluations:** Suggested moves and computer-generated assessments.
+- **Pedagogical interpretations:** Explanations intended to help the learner understand a position.
+
+Engine evaluations are not automatically proof that a particular explanation is correct.
+
+## Development Status
+
+**Planned module — implementation and validation pending.**
+
+This README describes the intended design, not a claim that all listed capabilities are currently implemented.
+
+## Dependencies
+
+Planned core dependency:
 
 ```bash
-huggingface-cli download <HF_ORG>/<HF_DATASET> \
-    --repo-type dataset --local-dir data/chess
+pip install python-chess
 ```
 
-## What is here
+Stockfish integration will require a separately available Stockfish engine.
 
-| path | records | what it is |
-|---|---:|---|
-| `pooled/train.jsonl` | 100,000 | Stage-1 training across 100 students: 80,000 single-turn and 20,000 guidance records |
-| `players/s035bc3bf.jsonl` … | 1,000 each | Stage-2 specialization, 30 students |
-| `test_st/s035bc3bf.jsonl` … | 5,000 each | single-turn held-out records |
-| `test_mt/s035bc3bf.jsonl` … | 4,000 each | multi-turn held-out records |
+## Integration
 
-The names `test_st` and `test_mt` are the same names used in every domain in this repository, and `studentsim-eval` defaults to them. The same student ids are used across `players/`, `test_st/`, and `test_mt/`, so each student's training file and held-out files share a name.
-
-Student ids are random and carry no relation to accounts on the source site. No mapping back to source-site accounts exists.
-
-A record is a chat. A single-turn record is `[user, assistant]`: the position,
-and the move the student played. A guidance record is
-`[user, assistant, user, assistant]`, where the second user turn is the tutor
-and the last assistant turn is what the student did after reading it.
-
-## Per-student files
-
-The files under `players/` are already the Stage-2 training subset and can be trained on directly.
-
-Each file contains 800 single-turn records plus 50 records for each of the four guidance modes. The equal counts per mode make the per-mode responsiveness breakdown comparable across modes.
-
-The four guidance modes are `strategic`, `socratic`, `error_remediation`, and `comparative`. Multi-turn records carry the mode in an `instruction_type` field. Each `test_mt` file has 1,000 records per mode.
+The intended interface is an optional chess-learning module within Noggimigo, separate from its general-purpose tutoring functionality.

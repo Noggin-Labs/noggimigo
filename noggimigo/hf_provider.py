@@ -254,6 +254,15 @@ class HuggingFaceLocalTutor:
             return_dict=True,
         )
 
+        # Fail with a diagnosable message rather than an opaque TypeError deep in
+        # generate(): the provider depends on a mapping-like encoder output.
+        if not hasattr(encoded, "keys") or not hasattr(encoded, "__getitem__"):
+            raise RuntimeError(
+                "Tokenizer.apply_chat_template did not return a mapping "
+                f"(got {type(encoded).__name__}). This provider requires a "
+                "tokenizer whose return_dict=True support yields a BatchEncoding."
+            )
+
         # Move tokenized inputs to the model's input device.
         input_device = getattr(self._model, "device", None)
 
@@ -268,7 +277,7 @@ class HuggingFaceLocalTutor:
 
         with inference_context:
             output = self._model.generate(
-                **encoded,
+                **dict(encoded),
                 max_new_tokens=self.max_new_tokens,
                 do_sample=False,
                 pad_token_id=self._tokenizer.eos_token_id,

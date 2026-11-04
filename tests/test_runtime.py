@@ -49,13 +49,24 @@ def test_model_failure_falls_back():
 
 def test_mocked_model_structured_output():
     good = {"student_facing_message":"What operation undoes +4?","pedagogical_action":"ASK_GUIDING_QUESTION","misconception_candidates":[],"requires_verification":True}
+    class Tensor(list):
+        @property
+        def shape(self):
+            return (len(self), len(self[0]))
+
+    class Encoded(dict):
+        """Faithful stand-in for a transformers BatchEncoding:
+        a mapping that also supports .to(device)."""
+        def to(self, device):
+            return self
+
     class Tokenizer:
         eos_token_id = 0
         def apply_chat_template(self, *a, **k):
-            class T:
-                shape = [1, 3]
-                def to(self, device): return self
-            return T()
+            return Encoded(
+                input_ids=Tensor([[1, 2, 3]]),
+                attention_mask=Tensor([[1, 1, 1]]),
+            )
         def decode(self, *a, **k): return json.dumps(good)
     class Model:
         device = "cpu"

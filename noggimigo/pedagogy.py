@@ -46,23 +46,72 @@ _REQUIRED_KEYS = {
     "requires_verification",
 }
 
+# Claim detectors.
+#
+# These are lexical pattern detectors, not natural-language understanding. They are
+# deliberately broad because the costs are asymmetric: a false positive only falls
+# back to the deterministic feedback the application already produced, while a false
+# negative lets the model contradict authoritative state. Adversarial review found
+# that the original patterns missed common phrasings ("That's right!", "You've
+# mastered this!", "Let's move on."), so the alternatives below widen coverage while
+# preserving boundaries so that math-context tokens such as "right-hand side" and
+# "perfect square" are not treated as correctness claims.
 _CORRECT_CLAIMS = re.compile(
-    r"\b(correct|right answer|you are right|you’re right|you've got it|you got it|exactly|well done)\b",
+    r"\b(?:"
+    r"correct"
+    r"|right answer|right\b(?![-\s]?hand)"
+    r"|(?:you are|you[’']re) right"
+    r"|(?:that[’']?s|that is|this is|it[’']?s|it is) right"
+    r"|(?:you have |you[’']ve )?got it"
+    r"|exactly|well done|spot on|bingo|nailed it"
+    r")\b",
     re.IGNORECASE,
 )
 _INCORRECT_CLAIMS = re.compile(
-    r"\b(incorrect|wrong answer|you are wrong|you’re wrong|not quite)\b",
+    r"\b(?:incorrect|wrong answer|(?:you are|you[’']re) wrong|not quite|not right)\b",
     re.IGNORECASE,
 )
 _COMPLETION_CLAIMS = re.compile(
-    r"\b(lesson complete|you completed the lesson|you have completed|lesson is finished)\b",
+    r"\b(?:"
+    r"lesson complete|lesson is (?:complete|finished|over)"
+    r"|(?:you have|you[’']ve) (?:completed|finished)"
+    r"|(?:you are|you[’']re) (?:done|finished)"
+    r"|(?:all done|that was the last)"
+    r")\b",
     re.IGNORECASE,
 )
-_MASTERY_CLAIMS = re.compile(r"\b(you mastered|you have mastered|mastery achieved)\b", re.IGNORECASE)
+_MASTERY_CLAIMS = re.compile(
+    r"\b(?:"
+    r"(?:you have |you[’']ve )?mastered"
+    r"|mastery (?:achieved|attained)"
+    r")\b",
+    re.IGNORECASE,
+)
 _PROGRESSION_CLAIMS = re.compile(
-    r"\b(next lesson|next question|moving on to|you have advanced|you advanced)\b",
+    r"\b(?:"
+    r"next lesson|next question"
+    r"|moving on|move on to"
+    r"|(?:you have |you[’']ve )?advanced (?:to|past)"
+    r")\b",
     re.IGNORECASE,
 )
+
+# Spoken forms of common fractions. Needed because an answer leak check that only
+# knows "1/4" and "0.25" does not catch "one quarter".
+_FRACTION_WORDS: dict[tuple[int, int], tuple[str, ...]] = {
+    (1, 2): ("one half", "a half"),
+    (1, 3): ("one third", "a third"),
+    (1, 4): ("one quarter", "a quarter", "one fourth", "a fourth"),
+    (1, 5): ("one fifth", "a fifth"),
+    (3, 4): ("three quarters", "three fourths"),
+    (2, 3): ("two thirds",),
+    (1, 8): ("one eighth", "an eighth"),
+}
+
+_DIGIT_TO_WORD = {
+    "0": "zero", "1": "one", "2": "two", "3": "three", "4": "four",
+    "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine",
+}
 
 
 def _has_control_characters(value: str) -> bool:
@@ -90,6 +139,7 @@ def _numeric_forms(value: str) -> set[str]:
         except (ValueError, ZeroDivisionError, InvalidOperation):
             continue
         forms.add(f"{rational.numerator}/{rational.denominator}")
+        forms.update(_FRACTION_WORDS.get((rational.numerator, rational.denominator), ()))
         denominator = rational.denominator
         while denominator % 2 == 0:
             denominator //= 2
@@ -111,7 +161,15 @@ def _leaks_expected_answer(message: str, expected_answer: str | None) -> bool:
     # Text answers are checked as whole phrases, not arbitrary substrings.
     if not re.fullmatch(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:\s*/\s*[+-]?\d+)?", expected_answer.strip()):
         phrase = re.escape(normalized_expected)
-        return bool(re.search(rf"(?<!\w){phrase}(?!\w)", normalized_message))
+        if re.search(rf"(?<!\w){phrase}(?!\w)", normalized_message):
+            return True
+        # Also check a spoken-number variant, e.g. "subtract 4" -> "subtract four".
+        spoken = normalized_expected
+        for digit, word in _DIGIT_TO_WORD.items():
+            spoken = re.sub(rf"(?<!\w){digit}(?!\w)", word, spoken)
+        if spoken != normalized_expected:
+            return bool(re.search(rf"(?<!\w){re.escape(spoken)}(?!\w)", normalized_message))
+        return False
 
     forms = _numeric_forms(expected_answer.strip())
     for form in forms:

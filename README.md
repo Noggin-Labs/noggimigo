@@ -219,7 +219,7 @@ Activate it.
 **Windows:**
 
 ```powershell
-.venv\\Scripts\\activate
+.venv\Scripts\activate
 ```
 
 **Linux/macOS:**

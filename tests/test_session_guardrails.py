@@ -1,3 +1,5 @@
+import pytest
+
 from noggimigo.session import NoggimigoSession
 
 
@@ -65,3 +67,16 @@ def test_provider_failure_does_not_crash_or_change_deterministic_result():
     assert result["model_fallback"] is True
     assert result["status"] == "INCORRECT"
     assert result["advanced"] is False
+
+
+def test_zero_history_limit_disables_event_retention():
+    session = NoggimigoSession(history_limit=0)
+    session.request_hint()
+    session.submit("not an answer")
+    assert session.history == []
+
+
+@pytest.mark.parametrize("history_limit", [-1, 1.5, "2", True, None])
+def test_history_limit_must_be_a_non_negative_integer(history_limit):
+    with pytest.raises(ValueError, match="non-negative integer"):
+        NoggimigoSession(history_limit=history_limit)

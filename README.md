@@ -438,6 +438,7 @@ noggimigo/
 │   ├── curriculum.py
 │   ├── hf_provider.py
 │   ├── intent.py
+│   ├── session.py
 │   └── LessonGenerator.py
 │
 ├── tests/

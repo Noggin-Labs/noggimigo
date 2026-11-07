@@ -72,7 +72,7 @@ The long-term vision is an educational system that accommodates differences in h
 - Misconception-specific feedback.
 - Hints without automatically advancing lessons.
 - Session reset and completion tracking.
-- Bounded interaction history.
+- Bounded interaction history. Set `history_limit=0` to disable in-memory event retention for a session.
 
 ### Configurable teaching preferences
 
@@ -219,7 +219,7 @@ Activate it.
 **Windows:**
 
 ```powershell
-.venv\Scripts\activate
+.venv\\Scripts\\activate
 ```
 
 **Linux/macOS:**
@@ -438,7 +438,6 @@ noggimigo/
 │   ├── curriculum.py
 │   ├── hf_provider.py
 │   ├── intent.py
-│   ├── session.py
 │   └── LessonGenerator.py
 │
 ├── tests/

@@ -1,4 +1,4 @@
-"""Integrated Noggimigo session runtime with authoritative verification."""
+""""Integrated Noggimigo session runtime with authoritative verification."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,6 +22,8 @@ class NoggimigoSession:
     """Authoritative lesson state with optional, untrusted model suggestions."""
 
     def __init__(self, lesson_id: str = "fractions_intro", *, model=None, preferences=None, history_limit: int = 30):
+        if isinstance(history_limit, bool) or not isinstance(history_limit, int) or history_limit < 0:
+            raise ValueError("history_limit must be a non-negative integer")
         self.model = model
         self.preferences = preferences or TeachingPreferences()
         self.history_limit = history_limit
@@ -56,6 +58,8 @@ class NoggimigoSession:
         return {"bkt": self.mastery.snapshot(), "mirt_ability": self.mastery.mirt_snapshot()}
 
     def _record(self, event: dict[str, Any]) -> None:
+        if self.history_limit == 0:
+            return
         self.history.append(event)
         del self.history[:-self.history_limit]
 
@@ -113,3 +117,4 @@ class NoggimigoSession:
                     result["model_message"] = validated["student_facing_message"]
                     result["pedagogical_action"] = validated["pedagogical_action"]
         return result
+"

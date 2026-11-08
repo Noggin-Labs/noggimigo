@@ -1,4 +1,4 @@
-""""Integrated Noggimigo session runtime with authoritative verification."""
+"""Integrated Noggimigo session runtime with authoritative verification."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -117,4 +117,3 @@ class NoggimigoSession:
                     result["model_message"] = validated["student_facing_message"]
                     result["pedagogical_action"] = validated["pedagogical_action"]
         return result
-"

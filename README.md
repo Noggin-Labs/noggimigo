@@ -161,7 +161,7 @@ The deterministic engine remains responsible for those decisions.
 | `answer_verifier.py` | Mathematical parsing and answer verification |
 | `curriculum.py` | Explicit lesson definitions |
 | `hf_provider.py` | Optional local language-model integration |
-| `intent.py` | Experimental intent classification |
+| `intent.py` | Deterministic learner-message intent routing |
 | `cli.py` | Command-line interface |
 | `voice.py` | Voice identity and optional local speech output |
 | `LessonGenerator.py` | Additional lesson-generation implementation |

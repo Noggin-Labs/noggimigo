@@ -121,7 +121,7 @@ def test_mirt_rejects_invalid_learning_rates(learning_rate):
 
 def test_mirt_accepts_zero_learning_rate():
     state = MIRTState(["fractions"], learning_rate=0.0)
-    before = state.mirt_snapshot() if hasattr(state, "mirt_snapshot") else dict(state.ability)
+    before = dict(state.ability)
     state.update(MIRTItem({}, {}), True)
     assert state.ability == before
 

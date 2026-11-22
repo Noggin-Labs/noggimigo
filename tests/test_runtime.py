@@ -3,7 +3,7 @@ import importlib
 import pytest
 from noggimigo.answer_verifier import verify_answer
 from noggimigo.evaluation import brier_score, expected_calibration_error, monotonicity_violation_rate
-from noggimigo.mastery import BKTParameters, BKTState, MasteryTracker
+from noggimigo.mastery import BKTParameters, BKTState, MasteryTracker, MIRTItem, MIRTState
 from noggimigo.session import NoggimigoSession
 from noggimigo.hf_provider import HuggingFaceLocalTutor
 
@@ -111,3 +111,39 @@ def test_study_metrics_are_deterministic_and_bounded():
     assert brier_score(predictions, outcomes) == pytest.approx(0.025)
     assert expected_calibration_error(predictions, outcomes, bins=2) == pytest.approx(0.15)
     assert monotonicity_violation_rate([0.1, 0.2, 0.15, 0.4]) == pytest.approx(1 / 3)
+
+
+@pytest.mark.parametrize("learning_rate", [float("nan"), float("inf"), float("-inf"), -0.01])
+def test_mirt_rejects_invalid_learning_rates(learning_rate):
+    with pytest.raises(ValueError, match="learning_rate"):
+        MIRTState(["fractions"], learning_rate=learning_rate)
+
+
+def test_mirt_accepts_zero_learning_rate():
+    state = MIRTState(["fractions"], learning_rate=0.0)
+    before = dict(state.ability)
+    state.update(MIRTItem({}, {}), True)
+    assert state.ability == before
+
+
+@pytest.mark.parametrize("elapsed_days", [float("nan"), float("inf"), float("-inf"), -0.01])
+def test_bkt_rejects_invalid_elapsed_days(elapsed_days):
+    with pytest.raises(ValueError, match="elapsed_days"):
+        BKTState().update(True, elapsed_days=elapsed_days)
+
+
+@pytest.mark.parametrize("field", ["difficulty", "discrimination"])
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_mirt_item_rejects_non_finite_parameters(field, value):
+    values = {"difficulty": {}, "discrimination": {}}
+    values[field] = {"fractions": value}
+    with pytest.raises(ValueError, match=field):
+        MIRTItem(**values)
+
+
+def test_mirt_item_allows_finite_negative_discrimination():
+    item = MIRTItem(
+        difficulty={"fractions": 0.2},
+        discrimination={"fractions": -0.5},
+    )
+    assert item.discrimination["fractions"] == -0.5

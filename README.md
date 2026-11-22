@@ -105,17 +105,7 @@ The default model is `Qwen/Qwen3-0.6B`.
 
 ### Local intent classification
 
-The repository also contains an experimental pure-Python intent classifier.
-
-It combines:
-
-- TF-IDF similarity.
-- N-gram overlap.
-- Character-level similarity.
-- Configurable intent examples.
-- Confidence thresholds.
-
-This component is separate from the authoritative answer-verification and lesson-progression engine.
+The repository contains a dependency-free, rule-based intent router for answer submissions, questions, hint requests, confusion statements, explanation requests, and uncertain input. It returns inspectable routing evidence and never grades answers or changes lesson progression. The classifier is a baseline, not a calibrated language-understanding model. See docs/INTENT_RECOGNITION.md for its scope and limitations.
 
 ---
 

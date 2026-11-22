@@ -28,6 +28,7 @@ Noggimigo combines deterministic lesson progression, mathematical answer verific
 - [Getting Started](#getting-started)
 - [Python API](#python-api)
 - [Optional Local AI Model](#optional-local-ai-model)
+- [Optional Local Speech](#optional-local-speech)
 - [Testing](#testing)
 - [Accessibility and Scientific Integrity](#accessibility-and-scientific-integrity)
 - [Project Structure](#project-structure)
@@ -172,6 +173,7 @@ The deterministic engine remains responsible for those decisions.
 | `hf_provider.py` | Optional local language-model integration |
 | `intent.py` | Experimental intent classification |
 | `cli.py` | Command-line interface |
+| `voice.py` | Voice identity and optional local speech output |
 | `LessonGenerator.py` | Additional lesson-generation implementation |
 
 ---
@@ -380,6 +382,52 @@ Noggimigo displays a generated message only after its structural and pedagogical
 guardrails accept it. If generation or validation fails, the deterministic feedback
 is shown instead. The model does not decide whether an answer is correct or whether
 the lesson advances.
+
+
+## Optional Local Speech
+
+Noggimigo's voice is curious, thoughtful, warm, and lightly playful. It uses
+concise conversational English, asks one clear question at a time, and avoids
+forced praise or infantilizing language.
+
+Speech is optional and runs locally. The default engine integration uses
+[Kokoro ONNX](https://github.com/thewh1teagle/kokoro-onnx); model assets are not
+bundled with this repository.
+
+Install the optional speech dependencies:
+
+```powershell
+python -m pip install -e ".[voice]"
+```
+
+From the repository root, download the model and voice pack into the expected
+directory:
+
+```powershell
+New-Item -ItemType Directory -Force models/tts | Out-Null
+Invoke-WebRequest -Uri "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.onnx" -OutFile "models/tts/kokoro-v1.0.onnx"
+Invoke-WebRequest -Uri "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/voices-v1.0.bin" -OutFile "models/tts/voices-v1.0.bin"
+```
+
+Then launch Noggimigo with speech:
+
+```powershell
+python -m noggimigo.cli --speak
+```
+
+Choose a different speaker or adjust the speaking speed:
+
+```powershell
+python -m noggimigo.cli --speak --tts-voice af_sarah --speech-speed 0.9
+```
+
+The default speaker ID is provisional, not a claim that it is Noggimigo's final
+voice. Voice IDs and language compatibility depend on the selected Kokoro pack.
+Tutor text remains visible alongside speech. Audio failures do not stop the
+lesson, and this integration does not send speech to a hosted service.
+
+Kokoro ONNX's runtime is MIT-licensed and its model weights are Apache-2.0;
+review upstream notices and model documentation before redistributing assets.
 
 ---
 

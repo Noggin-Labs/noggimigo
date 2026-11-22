@@ -386,9 +386,9 @@ the lesson advances.
 
 ## Optional Local Speech
 
-Noggimigo's voice identity is **Migo**: curious, thoughtful, warm, and lightly
-playful. Migo uses concise conversational English, asks one clear question at a
-time, and avoids forced praise or infantilizing language.
+Noggimigo's voice is curious, thoughtful, warm, and lightly playful. It uses
+concise conversational English, asks one clear question at a time, and avoids
+forced praise or infantilizing language.
 
 Speech is optional and local. The default engine integration uses Kokoro ONNX;
 the model and voice pack are not bundled with this repository. Install the

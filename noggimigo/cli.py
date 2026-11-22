@@ -85,7 +85,7 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     mode = f"local model: {args.model_id}" if model else "deterministic mode"
     print(f"Noggimigo tutor ({mode}). Type 'hint', 'reset', or 'exit'.")
-    say("Hello! I'm Migo. Let's work through this together.")
+    say("Hello! I'm Noggimigo. Let's work through this together.")
 
     while not session.complete:
         prompt = session.current_prompt()

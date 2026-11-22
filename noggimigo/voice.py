@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 VOICE_PERSONA = {
-    "name": "Migo",
+    "name": "Noggimigo",
     "personality": ("curious", "thoughtful", "warm", "lightly playful"),
     "teaching_style": (
         "patient and Socratic",

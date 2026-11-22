@@ -61,7 +61,7 @@ def build_teaching_plan(
     This function intentionally does not infer ability, emotion, disability,
     attention, or mastery from a learner's wording or response time.
     """
-    if answer_status not in SUPPORTED_STATUSES:
+    if not isinstance(answer_status, str) or answer_status not in SUPPORTED_STATUSES:
         raise ValueError(f"Unsupported answer status: {answer_status!r}")
     if not isinstance(question, str) or not question.strip():
         raise ValueError("question must be a non-empty string")

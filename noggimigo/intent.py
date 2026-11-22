@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass
-from enum import StrEnum
+from enum import Enum
 
 
-class Intent(StrEnum):
+class Intent(str, Enum):
     """Supported interaction intents."""
 
     ANSWER_SUBMISSION = "ANSWER_SUBMISSION"
@@ -41,10 +41,10 @@ _RULES: tuple[tuple[Intent, tuple[re.Pattern[str], ...], float, str], ...] = (
     (
         Intent.HINT_REQUEST,
         (
-            re.compile(r"\b(?:give|show|provide|offer)\s+(?:me\s+)?(?:a\s+)?hint\b"),
+            re.compile(r"\b(?:give|show|provide|offer)\s+(?:me\s+)?(?:a\s+)?(?:hint|clue)\b"),
             re.compile(r"\b(?:can|could|may)\s+i\s+(?:have|get)\s+(?:a\s+)?hint\b"),
-            re.compile(r"\bneed\s+(?:a\s+)?hint\b"),
-            re.compile(r"^hint$"),
+            re.compile(r"\bneed\s+(?:a\s+)?(?:hint|clue)\b"),
+            re.compile(r"^(?:hint|clue)$"),
             re.compile(r"\bhelp\s+me\s+(?:with|on)\b"),
         ),
         0.98,

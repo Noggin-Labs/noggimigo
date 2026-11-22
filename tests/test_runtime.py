@@ -147,3 +147,33 @@ def test_mirt_item_allows_finite_negative_discrimination():
         discrimination={"fractions": -0.5},
     )
     assert item.discrimination["fractions"] == -0.5
+
+
+def test_session_includes_deterministic_teaching_plan_for_answer():
+    session = NoggimigoSession("fractions_intro")
+    result = session.submit("3/4")
+    plan = result["teaching_plan"]
+    assert plan["learner_state"] == "verified_incorrect"
+    assert plan["strategy"] == "one_step_scaffold"
+    assert plan["pedagogical_action"] == "GIVE_SMALL_HINT"
+    assert plan["requires_verification"] is True
+
+
+def test_session_includes_teaching_plan_for_hint_request():
+    result = NoggimigoSession("fractions_intro").request_hint()
+    plan = result["teaching_plan"]
+    assert plan["learner_state"] == "requested_support"
+    assert plan["strategy"] == "give_curriculum_hint"
+    assert plan["focus"] == "Subtract shaded parts from total parts: 4 - 3."
+
+
+def test_model_receives_teaching_plan_as_context():
+    class CapturingModel:
+        def generate(self, prompt, answer, **kwargs):
+            self.context = kwargs["lesson_context"]
+            raise RuntimeError("stop after context capture")
+
+    model = CapturingModel()
+    result = NoggimigoSession(model=model).submit("3/4")
+    assert result["model_fallback"] is True
+    assert model.context["teaching_plan"]["learner_state"] == "verified_incorrect"

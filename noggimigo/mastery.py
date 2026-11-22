@@ -26,8 +26,8 @@ class BKTParameters:
     def __post_init__(self) -> None:
         for name in ("p_init", "p_learn", "p_guess", "p_slip", "p_forget"):
             value = getattr(self, name)
-            if not 0.0 <= value <= 1.0:
-                raise ValueError(f"{name} must be between 0 and 1")
+            if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+                raise ValueError(f"{name} must be finite and between 0 and 1")
 
 
 class BKTState:
@@ -43,8 +43,8 @@ class BKTState:
         return self.p_mastery * (1.0 - p.p_slip) + (1.0 - self.p_mastery) * p.p_guess
 
     def update(self, correct: bool, *, elapsed_days: float = 0.0) -> float:
-        if elapsed_days < 0:
-            raise ValueError("elapsed_days cannot be negative")
+        if not math.isfinite(elapsed_days) or elapsed_days < 0:
+            raise ValueError("elapsed_days must be finite and non-negative")
         p = self.parameters
         if p.p_forget and elapsed_days:
             self.p_mastery *= math.exp(-p.p_forget * elapsed_days)
@@ -64,10 +64,23 @@ class BKTState:
 
 @dataclass(frozen=True)
 class MIRTItem:
-    """Difficulty and discrimination for one item over named KCs."""
+    """Difficulty and discrimination for one item over named KCs.
+
+    Values must be finite. Negative discrimination is allowed by this
+    lightweight implementation; callers are responsible for choosing a
+    scientifically justified parameterization.
+    """
 
     difficulty: dict[str, float]
     discrimination: dict[str, float]
+
+    def __post_init__(self) -> None:
+        for field_name in ("difficulty", "discrimination"):
+            for component, value in getattr(self, field_name).items():
+                if not math.isfinite(value):
+                    raise ValueError(
+                        f"{field_name}[{component!r}] must be finite"
+                    )
 
 
 class MIRTState:
@@ -78,6 +91,8 @@ class MIRTState:
     """
 
     def __init__(self, knowledge_components: Iterable[str], *, learning_rate: float = 0.08) -> None:
+        if not math.isfinite(learning_rate) or learning_rate < 0:
+            raise ValueError("learning_rate must be finite and non-negative")
         self.ability = {component: 0.0 for component in knowledge_components}
         self.learning_rate = learning_rate
         self.observations = 0

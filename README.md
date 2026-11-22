@@ -390,38 +390,41 @@ Noggimigo's voice is curious, thoughtful, warm, and lightly playful. It uses
 concise conversational English, asks one clear question at a time, and avoids
 forced praise or infantilizing language.
 
-Speech is optional and local. The default engine integration uses Kokoro ONNX;
-the model and voice pack are not bundled with this repository. Install the
-optional speech dependencies:
+Speech is optional and runs locally. The default engine integration uses
+[Kokoro ONNX](https://github.com/thewh1teagle/kokoro-onnx); model assets are not
+bundled with this repository.
 
-```bash
+Install the optional speech dependencies:
+
+```powershell
 python -m pip install -e ".[voice]"
 ```
 
-Download the Kokoro ONNX model and voice pack from the
-[upstream Kokoro ONNX releases](https://github.com/thewh1teagle/kokoro-onnx/releases)
-and place them at:
+From the repository root, download the model and voice pack into the expected
+directory:
 
-- `models/tts/kokoro-v1.0.onnx`
-- `models/tts/voices-v1.0.bin`
+```powershell
+New-Item -ItemType Directory -Force models/tts | Out-Null
+Invoke-WebRequest -Uri "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.onnx" -OutFile "models/tts/kokoro-v1.0.onnx"
+Invoke-WebRequest -Uri "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/voices-v1.0.bin" -OutFile "models/tts/voices-v1.0.bin"
+```
 
-Then start the tutor with speech:
+Then launch Noggimigo with speech:
 
-```bash
+```powershell
 python -m noggimigo.cli --speak
 ```
 
-Choose another speaker, adjust speed, or set custom asset paths:
+Choose a different speaker or adjust the speaking speed:
 
-```bash
+```powershell
 python -m noggimigo.cli --speak --tts-voice af_sarah --speech-speed 0.9
-python -m noggimigo.cli --speak --tts-model-path path/to/model.onnx --tts-voices-path path/to/voices.bin
 ```
 
-The default speaker ID is provisional, not a claim that it is the final
-Noggimigo voice. Voice IDs and language compatibility depend on the selected
-Kokoro pack. Tutor text remains visible, and audio failures do not stop the
-lesson. No speech is sent to a hosted service by this integration.
+The default speaker ID is provisional, not a claim that it is Noggimigo's final
+voice. Voice IDs and language compatibility depend on the selected Kokoro pack.
+Tutor text remains visible alongside speech. Audio failures do not stop the
+lesson, and this integration does not send speech to a hosted service.
 
 Kokoro ONNX's runtime is MIT-licensed and its model weights are Apache-2.0;
 review upstream notices and model documentation before redistributing assets.

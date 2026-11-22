@@ -358,6 +358,29 @@ Actual inference performance depends on available hardware and the selected mode
 
 No external inference API is required by this adapter.
 
+
+### Run the tutor with the optional local model
+
+The default CLI uses deterministic feedback and does not download model weights.
+To enable the optional local Hugging Face model:
+
+```bash
+python -m pip install -e ".[hf]"
+python -m noggimigo.cli --lesson fractions_intro --model
+```
+
+Choose a different locally runnable Hugging Face model with `--model-id`:
+
+```bash
+python -m noggimigo.cli --lesson algebra_intro --model --model-id Qwen/Qwen3-0.6B
+```
+
+The first model-backed run may download weights and requires suitable local hardware.
+Noggimigo displays a generated message only after its structural and pedagogical
+guardrails accept it. If generation or validation fails, the deterministic feedback
+is shown instead. The model does not decide whether an answer is correct or whether
+the lesson advances.
+
 ---
 
 ## Testing

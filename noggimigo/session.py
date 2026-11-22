@@ -8,6 +8,7 @@ from .answer_verifier import verify_answer
 from .curriculum import CURRICULUM
 from .mastery import MasteryTracker
 from .pedagogy import PedagogicalValidationError, validate_suggestion
+from .think import build_teaching_plan
 
 
 @dataclass
@@ -19,7 +20,7 @@ class TeachingPreferences:
 
 
 class NoggimigoSession:
-    """Authoritative lesson state with optional, untrusted model suggestions."""
+    """Authoritative lesson state with deterministic plans and optional model wording."""
 
     def __init__(self, lesson_id: str = "fractions_intro", *, model=None, preferences=None, history_limit: int = 30):
         if isinstance(history_limit, bool) or not isinstance(history_limit, int) or history_limit < 0:
@@ -63,11 +64,24 @@ class NoggimigoSession:
         self.history.append(event)
         del self.history[:-self.history_limit]
 
+    def _teaching_plan(self, status: str, node: dict[str, Any], feedback: str) -> dict[str, Any]:
+        return build_teaching_plan(
+            status,
+            question=node["question"],
+            deterministic_feedback=feedback,
+            hint=node.get("hint"),
+            preferences={
+                "one_step_at_a_time": self.preferences.one_step_at_a_time,
+                "hint_intensity": self.preferences.hint_intensity,
+            },
+        ).to_dict()
+
     def request_hint(self) -> dict[str, Any]:
         if self.complete:
             return {"status": "COMPLETE", "feedback": "This lesson is already complete."}
         node = self.lesson["nodes"][self.index]
         result = {"status": "HINT_REQUESTED", "feedback": node["hint"], "advanced": False, "progress": self.current_prompt()["progress"]}
+        result["teaching_plan"] = self._teaching_plan("HINT_REQUESTED", node, result["feedback"])
         self._record({"type": "hint", **result})
         return result
 
@@ -87,6 +101,7 @@ class NoggimigoSession:
                 feedback = check.reason
             result = {"status": check.status, "feedback": feedback, "advanced": False, "completed": False, "next_prompt": self.current_prompt()}
         result["mastery"] = self.mastery_snapshot()
+        result["teaching_plan"] = self._teaching_plan(check.status, node, result["feedback"])
         self._record({"type": "answer", "answer": answer, "knowledge_components": node["knowledge_components"], "correct": is_correct, "mastery_event": mastery_event, **result})
 
         if self.model is not None:
@@ -95,12 +110,16 @@ class NoggimigoSession:
                     node["question"],
                     answer,
                     subject=self.lesson["subject"],
-                    lesson_context={"title": self.lesson["title"], "objective": self.lesson["objective"]},
+                    lesson_context={
+                        "title": self.lesson["title"],
+                        "objective": self.lesson["objective"],
+                        "teaching_plan": result["teaching_plan"],
+                    },
                     deterministic_feedback=result["feedback"],
                 )
             except Exception:
                 # Provider failures are expected to be recoverable; deterministic
-                # verification and progression have already completed.
+                # verification and teaching plans have already completed.
                 result["model_fallback"] = True
             else:
                 try:

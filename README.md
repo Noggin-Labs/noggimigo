@@ -415,41 +415,24 @@ NFOT-related research remains separate from the tutoring engine's correctness gu
 
 ## Project Structure
 
+The repository is organized by responsibility:
+
 ```text
 noggimigo/
-│
-├── .github/
-│   ├── workflows/
-│   └── FUNDING.yml
-│
-├── configs/
-│   ├── training/
-│   └── tutor_rl/
-│
-├── data/
-│   ├── chess/
-│   ├── l2/
-│   └── math/
-│
-├── noggimigo/
-│   ├── __init__.py
-│   ├── answer_verifier.py
-│   ├── cli.py
-│   ├── curriculum.py
-│   ├── hf_provider.py
-│   ├── intent.py
-│   ├── session.py
-│   └── LessonGenerator.py
-│
-├── tests/
-│   └── test_runtime.py
-│
-├── LICENSE
+├── .github/       # Repository automation and community configuration
+├── configs/       # Training and tutor-RL configuration
+├── data/          # Intentionally tracked data assets
+├── docs/          # Architecture, protocols, and project documentation
+├── noggimigo/     # Python application and runtime packages
+├── tests/         # Automated test suite
 ├── README.md
-├── SECURITY.md
 ├── pyproject.toml
-└── package-lock.json
+└── LICENSE
 ```
+
+For the exact tracked directory and file inventory, see
+[`docs/REPOSITORY_LAYOUT.md`](docs/REPOSITORY_LAYOUT.md). That document is the
+source of truth for the detailed repository tree and placement guidance.
 
 ---
 

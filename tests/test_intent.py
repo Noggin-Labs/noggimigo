@@ -19,7 +19,7 @@ def recognizer():
         ("What does the denominator mean?", Intent.QUESTION),
         ("Can you tell me why?", Intent.QUESTION),
         ("Can I get a hint?", Intent.HINT_REQUEST),
-        ("Give me a clue", Intent.ANSWER_SUBMISSION),
+        ("Give me a clue", Intent.HINT_REQUEST),
         ("Give me a hint", Intent.HINT_REQUEST),
         ("hint", Intent.HINT_REQUEST),
         ("Please explain this another way", Intent.EXPLANATION_REQUEST),

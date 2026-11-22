@@ -28,6 +28,7 @@ Noggimigo combines deterministic lesson progression, mathematical answer verific
 - [Getting Started](#getting-started)
 - [Python API](#python-api)
 - [Optional Local AI Model](#optional-local-ai-model)
+- [Optional Local Speech](#optional-local-speech)
 - [Testing](#testing)
 - [Accessibility and Scientific Integrity](#accessibility-and-scientific-integrity)
 - [Project Structure](#project-structure)
@@ -172,6 +173,7 @@ The deterministic engine remains responsible for those decisions.
 | `hf_provider.py` | Optional local language-model integration |
 | `intent.py` | Experimental intent classification |
 | `cli.py` | Command-line interface |
+| `voice.py` | Voice identity and optional local speech output |
 | `LessonGenerator.py` | Additional lesson-generation implementation |
 
 ---
@@ -380,6 +382,49 @@ Noggimigo displays a generated message only after its structural and pedagogical
 guardrails accept it. If generation or validation fails, the deterministic feedback
 is shown instead. The model does not decide whether an answer is correct or whether
 the lesson advances.
+
+
+## Optional Local Speech
+
+Noggimigo's voice identity is **Migo**: curious, thoughtful, warm, and lightly
+playful. Migo uses concise conversational English, asks one clear question at a
+time, and avoids forced praise or infantilizing language.
+
+Speech is optional and local. The default engine integration uses Kokoro ONNX;
+the model and voice pack are not bundled with this repository. Install the
+optional speech dependencies:
+
+```bash
+python -m pip install -e ".[voice]"
+```
+
+Download the Kokoro ONNX model and voice pack from the
+[upstream Kokoro ONNX releases](https://github.com/thewh1teagle/kokoro-onnx/releases)
+and place them at:
+
+- `models/tts/kokoro-v1.0.onnx`
+- `models/tts/voices-v1.0.bin`
+
+Then start the tutor with speech:
+
+```bash
+python -m noggimigo.cli --speak
+```
+
+Choose another speaker, adjust speed, or set custom asset paths:
+
+```bash
+python -m noggimigo.cli --speak --tts-voice af_sarah --speech-speed 0.9
+python -m noggimigo.cli --speak --tts-model-path path/to/model.onnx --tts-voices-path path/to/voices.bin
+```
+
+The default speaker ID is provisional, not a claim that it is the final
+Noggimigo voice. Voice IDs and language compatibility depend on the selected
+Kokoro pack. Tutor text remains visible, and audio failures do not stop the
+lesson. No speech is sent to a hosted service by this integration.
+
+Kokoro ONNX's runtime is MIT-licensed and its model weights are Apache-2.0;
+review upstream notices and model documentation before redistributing assets.
 
 ---
 

@@ -9,7 +9,7 @@ from noggimigo.voice import VOICE_PERSONA, KokoroLocalVoice, VoiceSettings
 
 
 def test_voice_persona_has_a_defined_identity():
-    assert VOICE_PERSONA["name"] == "Migo"
+    assert VOICE_PERSONA["name"] == "Noggimigo"
     assert "curious" in VOICE_PERSONA["personality"]
     assert "patient and Socratic" in VOICE_PERSONA["teaching_style"]
 

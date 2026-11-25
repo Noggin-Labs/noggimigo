@@ -1,0 +1,52 @@
+{
+  "experiment_id": "FT-001",
+  "status": "training_completed_evaluation_pending",
+  "base_model": "Qwen/Qwen3-0.6B",
+  "method": "supervised_fine_tuning_with_lora",
+  "python": "3.13.16",
+  "pytorch": "2.14.1+cu130",
+  "transformers": "5.24.1",
+  "datasets": "5.2.0",
+  "peft": "0.22.0",
+  "trl": "1.19.0",
+  "hardware": {
+    "gpu": "NVIDIA Tesla T4",
+    "gpu_memory_gb": 15.64,
+    "cuda_available": true
+  },
+  "precision": "float16",
+  "training": {
+    "examples": 5,
+    "evaluation_examples": 0,
+    "epochs": 1,
+    "per_device_train_batch_size": 1,
+    "gradient_accumulation_steps": 1,
+    "optimizer_steps": 5,
+    "learning_rate": 0.0001,
+    "max_length": 512,
+    "packing": false,
+    "optimizer": "adamw_torch",
+    "seed": 42,
+    "save_strategy": "no"
+  },
+  "lora": {
+    "task_type": "CAUSAL_LM",
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.05,
+    "bias": "none",
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ]
+  },
+  "trainable_parameters": 5046272,
+  "total_parameters": 601096192,
+  "trainable_percentage": 0.8395,
+  "final_reported_training_loss": 3.684313249588013
+}

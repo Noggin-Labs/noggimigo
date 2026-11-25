@@ -351,7 +351,25 @@ Actual inference performance depends on available hardware and the selected mode
 No external inference API is required by this adapter.
 
 
-### Use a locally installed Ollama model\n\nIf Ollama is installed and its local service is running, no additional Python package is required:\n\n```python\nfrom noggimigo import NoggimigoSession\nfrom noggimigo.ollama_provider import OllamaLocalTutor\n\ntutor = OllamaLocalTutor(model=\"llama3.2:latest\")\nsession = NoggimigoSession(\"fractions_intro\", model=tutor)\nresult = session.submit(\"1/4\")\n\nprint(result[\"feedback\"])\nprint(result.get(\"model_message\", \"Deterministic fallback used.\"))\n```\n\nThe adapter uses Ollama's local `/api/chat` endpoint with non-streaming JSON output and temperature 0. It does not download models or use a hosted inference service. Pull and run a model separately with Ollama before using the adapter. A generated message is shown only if the existing pedagogical validator accepts it; this validator checks structural and state consistency, not full mathematical truth.\n\n### Run the tutor with the optional local model
+### Use a locally installed Ollama model
+
+If Ollama is installed and its local service is running, no additional Python package is required:
+
+```python
+from noggimigo import NoggimigoSession
+from noggimigo.ollama_provider import OllamaLocalTutor
+
+tutor = OllamaLocalTutor(model=\"llama3.2:latest\")
+session = NoggimigoSession(\"fractions_intro\", model=tutor)
+result = session.submit(\"1/4\")
+
+print(result[\"feedback\"])
+print(result.get(\"model_message\", \"Deterministic fallback used.\"))
+```
+
+The adapter uses Ollama's local `/api/chat` endpoint with non-streaming JSON output and temperature 0. It does not download models or use a hosted inference service. Pull and run a model separately with Ollama before using the adapter. A generated message is shown only if the existing pedagogical validator accepts it; this validator checks structural and state consistency, not full mathematical truth.
+
+### Run the tutor with the optional local model
 
 The default CLI uses deterministic feedback and does not download model weights.
 To enable the optional local Hugging Face model:

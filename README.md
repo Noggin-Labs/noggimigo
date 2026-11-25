@@ -90,7 +90,7 @@ These are presentation and scaffolding preferences, not disability classificatio
 
 ### Optional local AI
 
-Noggimigo supports an optional Hugging Face Transformers adapter.
+Noggimigo supports optional local Hugging Face Transformers and Ollama adapters.
 
 The adapter:
 
@@ -351,7 +351,7 @@ Actual inference performance depends on available hardware and the selected mode
 No external inference API is required by this adapter.
 
 
-### Run the tutor with the optional local model
+### Use a locally installed Ollama model\n\nIf Ollama is installed and its local service is running, no additional Python package is required:\n\n```python\nfrom noggimigo import NoggimigoSession\nfrom noggimigo.ollama_provider import OllamaLocalTutor\n\ntutor = OllamaLocalTutor(model=\"llama3.2:latest\")\nsession = NoggimigoSession(\"fractions_intro\", model=tutor)\nresult = session.submit(\"1/4\")\n\nprint(result[\"feedback\"])\nprint(result.get(\"model_message\", \"Deterministic fallback used.\"))\n```\n\nThe adapter uses Ollama's local `/api/chat` endpoint with non-streaming JSON output and temperature 0. It does not download models or use a hosted inference service. Pull and run a model separately with Ollama before using the adapter. A generated message is shown only if the existing pedagogical validator accepts it; this validator checks structural and state consistency, not full mathematical truth.\n\n### Run the tutor with the optional local model
 
 The default CLI uses deterministic feedback and does not download model weights.
 To enable the optional local Hugging Face model:
@@ -448,7 +448,7 @@ The existing tests cover:
 - Model failure fallback.
 - Mocked structured model generation.
 
-Mocked model tests do not constitute validation of real-world tutoring performance or real model inference.
+Mocked model tests do not constitute validation of real-world tutoring performance or real model inference. The Ollama adapter tests use a mocked HTTP response; they do not establish that Llama 3.2 follows the tutoring contract reliably.
 
 ---
 

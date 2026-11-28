@@ -312,6 +312,51 @@ session.reset("algebra_intro")
 
 ---
 
+## HTTP API for Noggin and other clients
+
+Noggimigo includes an optional FastAPI adapter for web applications. The API wraps
+the existing deterministic `NoggimigoSession`; it does not replace the answer
+verifier or allow a language model to control lesson progression.
+
+Install the API extra and run the service:
+
+```bash
+python -m pip install -e ".[api]"
+uvicorn noggimigo.api:app --host 0.0.0.0 --port 8000
+```
+
+The service exposes:
+
+| Route | Purpose |
+|---|---|
+| `GET /health` | Health check |
+| `POST /api/sessions` | Start a supported lesson |
+| `GET /api/sessions/{session_id}` | Read current lesson state |
+| `POST /api/sessions/{session_id}/hint` | Request a hint without advancing |
+| `POST /api/sessions/{session_id}/answer` | Verify an answer and return feedback |
+
+Create-session JSON uses `{"lesson_id":"fractions_intro"}`; answer JSON uses
+`{"answer":"1/4"}`. The currently supported lesson IDs are exactly the IDs in
+`noggimigo.curriculum.CURRICULUM`: `fractions_intro`, `algebra_intro`, and
+`patterns_sequences`. Other lesson IDs are rejected rather than silently
+substituted.
+
+Set `NOGGIMIGO_ALLOWED_ORIGINS` to a comma-separated list of exact browser
+origins before deployment, for example
+`NOGGIMIGO_ALLOWED_ORIGINS=https://your-noggin-site.example`. The development
+default permits only `http://localhost:5173`. Do not use a wildcard origin for
+a public deployment.
+
+**Operational limits:** sessions are held in process memory, are not persistent,
+and are lost when the service restarts. The service caps its in-memory session
+store at 250 active sessions and evicts the least recently used session when
+that limit is exceeded. Run a single application process unless a shared session
+store is added. This first adapter does not enable hosted or local model inference;
+the deterministic engine is used by default. Put the service behind HTTPS and
+an appropriate rate limit before exposing it publicly.
+
+Install `.[test]` to run API tests as well as the core suite.
+
 ## Optional Local AI Model
 
 Noggimigo's deterministic core does not require a language model.

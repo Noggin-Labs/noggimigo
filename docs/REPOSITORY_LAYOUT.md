@@ -35,6 +35,7 @@ noggimigo/
 │   ├── chess/
 │   ├── tutor_rl/
 │   ├── __init__.py
+│   ├── api.py
 │   ├── LessonGenerator.py
 │   ├── answer_verifier.py
 │   ├── cli.py
@@ -51,6 +52,7 @@ noggimigo/
 │   └── specialists.py
 ├── tests/
 │   ├── test_adversarial_integrity.py
+│   ├── test_api.py
 │   ├── test_chess_board.py
 │   ├── test_coding_specialist.py
 │   ├── test_hf_provider_guardrails.py

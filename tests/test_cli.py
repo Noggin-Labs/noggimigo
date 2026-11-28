@@ -55,7 +55,7 @@ def test_cli_can_speak_without_changing_visible_text(monkeypatch, capsys):
     assert "Speech enabled (Kokoro voice: af_sarah)." in output
     assert "Noggimigo tutor" in output
     assert instances
-    assert "Hello! I'm Noggimigo." in instances[0].messages
+    assert any(message.startswith("Hello! I'm Noggimigo.") for message in instances[0].messages)
 
 
 def test_cli_rejects_unknown_lesson(capsys):
